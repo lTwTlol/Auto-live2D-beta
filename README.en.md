@@ -1,3 +1,11 @@
+<div align="center">
+  <a href="README.md">日本語</a> | 
+  <a href="README.zh-CN.md">简体中文</a> | 
+  <a href="README.en.md">English</a>
+</div>
+
+---
+
 # Auto虚拟形象
 
 > A derivative of [852wa/Anime2.5DRig](https://github.com/852wa/Anime2.5DRig).
