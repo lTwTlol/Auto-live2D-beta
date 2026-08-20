@@ -1,12 +1,10 @@
+# Auto虚拟形象
+
 <div align="center">
-  <a href="README.md">日本語</a> | 
-  <a href="README.zh-CN.md">简体中文</a> | 
+  <a href="README.md">简体中文</a> | 
+  <a href="README.ja.md">日本語</a> | 
   <a href="README.en.md">English</a>
 </div>
-
----
-
-# Auto虚拟形象
 
 > 本项目基于开源项目 [852wa/Anime2.5DRig](https://github.com/852wa/Anime2.5DRig) 二次开发。
 > 仓库地址：https://github.com/lTwTlol/Auto-live2D-beta
@@ -24,21 +22,17 @@
 
 ## Python 版（桌面应用）
 
-除浏览器版外，还附带 Python 桌面版（`main.py`）。UI 与布局和浏览器版完全一致。
+除浏览器版外，还附带 Python 桌面版。UI 与布局和浏览器版完全一致。
 
-### 安装
+### 使用方法
 
-```bash
-pip install -r requirements.txt
-python main.py
-```
-
-- 要求：Python 3.10+ 与 Microsoft Edge WebView2（Windows 11 已预装）。
+- 双击根目录下的 `run.bat` 即可启动（首次运行会自动安装依赖，需 Python 3.10+）。
+- 要求：Microsoft Edge WebView2（Windows 11 已预装）。
 - 启动后弹出桌面窗口，可与浏览器版一样拖入 PSD。
 
 ### OpenSeeFace 追踪
 
-桌面版在摄像头追踪之外，还支持 OpenSeeFace 追踪。在「自动」区块启用 **OpenSeeFace** 开关后，它会读取 `127.0.0.1:11573` 的 UDP 数据流。请先在同一台机器上启动数据源（例如同捆的 `opennseeface/Binary/facetracker.exe`，或 VSeeFace 向该端口发送 VMC）。
+桌面版在摄像头追踪之外，还支持 OpenSeeFace 追踪（含头部、眨眼、口型与虹膜/眼球视线）。进入 `opennseeface/Binary` 目录，双击运行 `run.bat`：程序会列出摄像头，按提示选择自己的摄像头编号及各项参数（模式、帧率）后即开始追踪。随后回到本应用，在「自动」区块启用 **OpenSeeFace** 开关，即会读取 `127.0.0.1:11573` 的 UDP 数据流并驱动头像。
 
 ### 语言切换（三语）
 

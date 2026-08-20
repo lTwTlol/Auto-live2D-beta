@@ -1,12 +1,10 @@
+# Auto虚拟形象
+
 <div align="center">
-  <a href="README.md">日本語</a> | 
-  <a href="README.zh-CN.md">简体中文</a> | 
+  <a href="README.md">简体中文</a> | 
+  <a href="README.ja.md">日本語</a> | 
   <a href="README.en.md">English</a>
 </div>
-
----
-
-# Auto虚拟形象
 
 > A derivative of [852wa/Anime2.5DRig](https://github.com/852wa/Anime2.5DRig).
 > This repository: https://github.com/lTwTlol/Auto-live2D-beta
@@ -24,21 +22,17 @@ Setup that used to be done by hand (mesh splitting, deformation, physics) is ful
 
 ## Python version (desktop app)
 
-In addition to the browser version, a Python desktop version (`main.py`) is included. Its UI and layout are identical to the browser version.
+In addition to the browser version, a Python desktop version is included. Its UI and layout are identical to the browser version.
 
-### Setup
+### Usage
 
-```bash
-pip install -r requirements.txt
-python main.py
-```
-
-- Requirements: Python 3.10+ and Microsoft Edge WebView2 (preinstalled on Windows 11).
+- Double-click `run.bat` in the repo root to launch (the first run installs dependencies automatically; Python 3.10+ required).
+- Requirements: Microsoft Edge WebView2 (preinstalled on Windows 11).
 - A desktop window opens on launch, and you can drop a PSD exactly like in the browser version.
 
 ### OpenSeeFace tracking
 
-The desktop app also supports OpenSeeFace tracking (alongside the webcam tracking). Enable the **OpenSeeFace** toggle in the "Auto" section; it reads the UDP stream on `127.0.0.1:11573`. Run a data source on the same machine first, e.g. the bundled `opennseeface/Binary/facetracker.exe` (or VSeeFace sending VMC to that port).
+The desktop app also supports OpenSeeFace tracking (alongside the webcam tracking), including head, blink, mouth and iris/gaze. Enter the `opennseeface/Binary` folder and double-click `run.bat`: it lists your cameras, so pick your camera number and each parameter (mode, FPS) and tracking starts. Then return to the app and enable the **OpenSeeFace** toggle in the "Auto" section; it reads the UDP stream on `127.0.0.1:11573` and drives the avatar.
 
 ### Language switching (3 languages)
 

@@ -668,14 +668,14 @@ function mdToHtml(md){
   if(inCode)html+='</code></pre>'; if(inList)html+='</ul>'; if(inTable)html+='</table>';
   return html;
 }
-const README_FILE = {ja:'README.md', en:'README.en.md', zh:'README.zh-CN.md'};
+const README_FILE = {ja:'README.ja.md', en:'README.en.md', zh:'README.md'};
 let readmeLang=null;
 async function openReadme(){
   const ov=document.getElementById('readmeOverlay');
   ov.classList.add('show');
   if(readmeLang===CUR_LANG) return;
   const body=document.getElementById('readmeBody');
-  const candidates = CUR_LANG==='ja' ? ['README.md'] : [README_FILE[CUR_LANG], 'README.md'];
+  const candidates = [README_FILE[CUR_LANG], 'README.md'];
   let md=null, lastErr=null;
   for(const url of candidates){
     try{
