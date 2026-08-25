@@ -26,7 +26,7 @@ In addition to the browser version, a Python desktop version is included. Its UI
 
 ### Usage
 
-- Double-click `run.bat` in the repo root to launch (the first run installs dependencies automatically; Python 3.10+ required).
+- Double-click `run.bat` in the repo root to launch. On first run it creates a project-local `.venv` and installs all dependencies there; the system Python is used only to create the virtual environment (Python 3.10+ required).
 - Requirements: Microsoft Edge WebView2 (preinstalled on Windows 11).
 - A desktop window opens on launch, and you can drop a PSD exactly like in the browser version.
 

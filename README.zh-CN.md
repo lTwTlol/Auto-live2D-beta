@@ -20,10 +20,7 @@
 
 ### セットアップ
 
-```bash
-pip install -r requirements.txt
-python main.py
-```
+ルート直下の `run.bat` をダブルクリックしてください。初回にプロジェクト専用の `.venv` を作成し、依存関係をその中へインストールします。システムの Python は仮想環境の作成にのみ使用されます。
 
 - 要件: Python 3.10+ と Windows の Edge WebView2（Win11 には標準搭載）。
 - 起動するとデスクトップウィンドウが開き、ブラウザ版と同様に PSD をドロップできます。
