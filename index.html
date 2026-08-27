@@ -98,6 +98,7 @@ header h1{letter-spacing:.05em}
   <option value="en">English</option>
   <option value="zh">简体中文</option>
 </select>
+<button class="btn" id="btnSelectPsd" data-i18n="btnFile">选择PSD文件</button>
 <button class="btn" id="btnReadme" style="margin-left:auto" data-i18n="readme">README</button></header>
 <div id="main">
   <div id="stage" class="checker">
@@ -376,7 +377,7 @@ function applyLang(){
 }
 document.addEventListener('DOMContentLoaded',()=>{
   const sel=document.getElementById('langSel');
-  if(sel){ sel.value=CUR_LANG; sel.addEventListener('change',()=>{ CUR_LANG=sel.value; applyLang(); }); }
+  if(sel){ sel.value=CUR_LANG; sel.addEventListener('change',()=>{ CUR_LANG=sel.value; applyLang(); saveSettings(); }); }
   applyLang();
 });
 
@@ -497,6 +498,7 @@ async function loadPsdBuffer(buf){
     if(rig.synth&&(rig.synth.eye||rig.synth.mouth)) rigInfoNotes.push(customGeneric?t('synthNoteCustom'):t('synthNoteBuiltin'));
     renderRigInfo();
     dropStatus.textContent='';
+    if(!_skipSave) saveLastPsdBytes(new Uint8Array(buf));
   }catch(err){
     dropStatus.textContent=t('errorPrefix')+err.message;
     dropEl.classList.remove('hidden');
@@ -527,6 +529,7 @@ function genericOpts(){
 }
 window.__loadPsdData=function(psd){ lastPre=window.Rigger.cleanPsdLayers(psd); lastPsd=psd; applyRig(window.Rigger.buildRig(psd, genericOpts())); }; // test hook
 document.getElementById('btnFile').addEventListener('click',()=>document.getElementById('fileInput').click());
+document.getElementById('btnSelectPsd').addEventListener('click',()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change',async ev=>{
   const f=ev.target.files[0]; if(f) loadPsdBuffer(await f.arrayBuffer());
 });
@@ -571,7 +574,9 @@ const sliders = { pAngleX:'angleX',pAngleY:'angleY',pAngleZ:'angleZ',pEyeL:'eyeO
   pEyeScaleL:'eyeScaleL',pEyeScaleR:'eyeScaleR',pMouthScale:'mouthScale' };
 for(const id in sliders){
   const el=document.getElementById(id), key=sliders[id], v=el.parentNode.querySelector('.val');
-  const upd=()=>{ T[key]=parseFloat(el.value); v.textContent=el.value; }; el.addEventListener('input',upd); upd();
+  const upd=()=>{ T[key]=parseFloat(el.value); v.textContent=el.value; saveSettings(); };
+  el.addEventListener('input',upd);
+  T[key]=parseFloat(el.value); v.textContent=el.value;
 }
 function setSlider(key,val){ for(const id in sliders) if(sliders[id]===key){
   const el=document.getElementById(id); el.value=val; el.dispatchEvent(new Event('input')); } }
@@ -579,7 +584,7 @@ function setSlider(key,val){ for(const id in sliders) if(sliders[id]===key){
 [['tgIdle','idle'],['tgBlink','blink'],['tgRand','rand'],['tgTalk','talk'],['tgMouse','mouse'],['tgMic','mic'],['tgPhys','phys']].forEach(([id,key])=>{
   const el=document.getElementById(id);
   el.addEventListener('click',()=>{ auto[key]=!auto[key]; el.classList.toggle('on',auto[key]);
-    if(key==='mic'&&auto.mic) initMic(); });
+    if(key==='mic'&&auto.mic) initMic(); saveSettings(); });
 });
 // camera toggle (webcam / MediaPipe FaceMesh)
 document.getElementById('tgCam').addEventListener('click',()=>{
@@ -631,12 +636,17 @@ document.getElementById('btnSavePsd').addEventListener('click',()=>{
     st.textContent=t('saveDone',{size:(blob.size/1e6).toFixed(1)});
   }catch(err){ st.textContent=t('saveErr')+err.message; }
 });
-document.querySelectorAll('[data-bg]').forEach(b=>b.addEventListener('click',()=>{
+let curBg='checker';
+function applyBg(name){
+  curBg=name;
   const s=document.getElementById('stage'); s.className='';
-  if(b.dataset.bg==='checker')s.classList.add('checker');
-  if(b.dataset.bg==='green')s.classList.add('green');
-  if(b.dataset.bg==='dark')s.style.background='#14151c'; else s.style.background='';
-}));
+  if(name==='checker') s.classList.add('checker');
+  if(name==='green') s.classList.add('green');
+  if(name==='dark') s.style.background='#14151c'; else s.style.background='';
+  document.querySelectorAll('[data-bg]').forEach(b=>b.classList.toggle('active', b.dataset.bg===name));
+  saveSettings();
+}
+document.querySelectorAll('[data-bg]').forEach(b=>b.addEventListener('click',()=>applyBg(b.dataset.bg)));
 
 // ---------- README viewer ----------
 function mdToHtml(md){
@@ -1145,6 +1155,88 @@ function tick(now){
   fpsN++; if(now-fpsT>500){ document.getElementById('fps').textContent=Math.round(fpsN*1000/(now-fpsT))+' fps';
     fpsN=0; fpsT=now; }
 }
+// ---------- persistence (settings + last PSD across restarts) ----------
+const SETTINGS_KEY='a2drig-settings';
+let _skipSave=false, saveTimer=null, _apiReady=null;
+
+function isPy(){
+  return !!(window.pywebview && window.pywebview.api &&
+    typeof window.pywebview.api.get_settings === 'function');
+}
+function ensureApiReady(){
+  if(!_apiReady){
+    _apiReady = new Promise(res=>{
+      if(isPy()){ res(); return; }
+      let settled=false;
+      const done=()=>{ if(!settled){ settled=true; res(); } };
+      window.addEventListener('pywebviewready', done, {once:true});
+      setTimeout(done, 3000);
+    });
+  }
+  return _apiReady;
+}
+
+function bytesToB64(bytes){
+  let bin=''; const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk) bin += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+  return btoa(bin);
+}
+function b64ToBytes(b64){
+  const bin=atob(b64); const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  return bytes;
+}
+async function saveLastPsdBytes(bytes){
+  await ensureApiReady();
+  if(!isPy()) return;
+  try{ await window.pywebview.api.save_last_psd(bytesToB64(bytes)); }catch(e){}
+}
+function saveSettings(){
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer=setTimeout(_writeSettings, 300);
+}
+async function _writeSettings(){
+  const data={
+    lang:CUR_LANG, bg:curBg,
+    params:Object.assign({},T),
+    auto:{idle:auto.idle, blink:auto.blink, rand:auto.rand, talk:auto.talk, mouse:auto.mouse, phys:auto.phys}
+  };
+  await ensureApiReady();
+  if(isPy()){ try{ await window.pywebview.api.save_settings(data); }catch(e){} }
+  else { try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(data)); }catch(e){} }
+}
+async function loadSettings(){
+  await ensureApiReady();
+  if(isPy()){
+    try{ const d=await window.pywebview.api.get_settings(); if(d && typeof d==='object') return d; }catch(e){}
+  }
+  try{ const raw=localStorage.getItem(SETTINGS_KEY); return raw?JSON.parse(raw):{}; }catch(e){ return {}; }
+}
+function applySettings(s){
+  if(s.params) for(const k in s.params){ if(k in T && k in DEFAULTS){ T[k]=+s.params[k]; setSlider(k,T[k]); } }
+  if(s.auto) for(const k in s.auto){ if(k in auto) auto[k]=!!s.auto[k]; }
+  [['tgIdle','idle'],['tgBlink','blink'],['tgRand','rand'],['tgTalk','talk'],['tgMouse','mouse'],['tgMic','mic'],['tgPhys','phys']].forEach(([id,key])=>{
+    document.getElementById(id).classList.toggle('on', auto[key]);
+  });
+  if(s.bg) applyBg(s.bg);
+  Object.assign(cur, T);
+}
+async function autoLoadLastPsd(){
+  await ensureApiReady();
+  if(!isPy()) return;
+  let b64=null;
+  try{ b64=await window.pywebview.api.load_last_psd(); }catch(e){ b64=null; }
+  if(!b64) return;
+  _skipSave=true;
+  try{ await loadPsdBuffer(b64ToBytes(b64)); }finally{ _skipSave=false; }
+}
+async function init(){
+  const s=await loadSettings();
+  if(s.lang==='ja'||s.lang==='en'||s.lang==='zh'){ if(s.lang!==CUR_LANG){ CUR_LANG=s.lang; applyLang(); } }
+  applySettings(s);
+  await autoLoadLastPsd();
+}
+init();
 requestAnimationFrame(tick);
 })();
 </script>
