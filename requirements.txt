@@ -1,5 +1,4 @@
 # Auto虚拟形象 — Python desktop host dependencies
-# Install into your local Python 3.10+:
-#   python -m pip install -r requirements.txt
+# Installed automatically into .venv by run.bat.
 
 pywebview>=5          # desktop webview host (Edge WebView2 on Windows)

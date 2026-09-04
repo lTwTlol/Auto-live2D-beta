@@ -13,9 +13,7 @@ OpenSeeFace tracking needs a data source on the same machine, e.g. the bundled
 below). Run it alongside this app; the OSF toggle in the UI then drives the
 avatar from that stream.
 
-Run:
-    pip install -r requirements.txt
-    python main.py
+Run ``run.bat``. It creates and uses the project-local ``.venv`` automatically.
 """
 
 import base64
